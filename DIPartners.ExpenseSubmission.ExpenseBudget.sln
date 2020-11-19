@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30517.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DIPartners.ExpenseSubmission.ExpenseBudget", "DIPartners.ExpenseSubmission.ExpenseBudget\DIPartners.ExpenseSubmission.ExpenseBudget.csproj", "{349179DA-0ED9-4D1B-94FB-7F47D1D3A41D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{349179DA-0ED9-4D1B-94FB-7F47D1D3A41D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{349179DA-0ED9-4D1B-94FB-7F47D1D3A41D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{349179DA-0ED9-4D1B-94FB-7F47D1D3A41D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{349179DA-0ED9-4D1B-94FB-7F47D1D3A41D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {613C841C-4FF9-4193-B4F4-5F64D6586EC9}
+	EndGlobalSection
+EndGlobal

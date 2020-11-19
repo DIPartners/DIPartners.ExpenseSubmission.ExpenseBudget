@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:noNamespaceSchemaLocation="http://www.m-files.com/schemas/appdef-client-v3.xsd">
+	<guid>880c16a0-cae8-4adf-8cc8-2cb63784fde2</guid>
+	<name>DIPartners.ExpenseSubmission.BudgetDashboard</name>
+	<version>0.1</version>
+    <description>Expense Details Dashboard</description>
+    <publisher>Document Imaging Partners</publisher>
+	<copyright></copyright>
+	<required-mfiles-version>12.0.5400.0</required-mfiles-version>
+	<optional>true</optional>
+	<enabled-by-default>true</enabled-by-default>
+  <platforms>
+    <platform>Desktop</platform>
+  </platforms>
+	<modules>
+		<module environment="shellui">
+			<file>console-shellui.js</file>
+			<file>shellui.js</file>
+		</module>
+	</modules>
+	<dashboards>
+		<dashboard id="Budget">
+			<content>Expense/Budget.html</content>
+			<allow-selection>true</allow-selection>
+		</dashboard>
+	</dashboards>
+</application>
