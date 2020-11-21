@@ -1,151 +1,268 @@
 //const { error } = require("jquery");
+var gVault;
 var gDashboard;
 var gUtil;
 
 // Entry point of the dashboard.
 function OnNewDashboard(dashboard) {
-
-    isPopup = dashboard.IsPopupDashboard;
-    // Parent is a shell pane container (tab), when dashboard is shown in right pane.
+    gVault = dashboard.Vault;
+    gDashboard = dashboard.CustomData;
     var tab = dashboard.Parent;
 
-    // Initialize console.
-    console.initialize(tab.ShellFrame.ShellUI, "Budget");
+    if (null != dashboard.CustomData && null != dashboard.CustomData.ObjectVersions) {
+        if (dashboard.CustomData.ObjectVersions.Count == 0) {
+            return;
+        }
+        // Initialize console.
+        console.initialize(tab.ShellFrame.ShellUI, "Budget");
 
-    gDashboard = dashboard;
-
-    // Some things are ready only after the dashboard has started.
-    dashboard.Events.Register(MFiles.Event.Started, OnStarted);
-    function OnStarted() {
-        SetDetails(dashboard);
+        // Some things are ready only after the dashboard has started.
+        dashboard.Events.Register(MFiles.Event.Started, OnStarted);
+        function OnStarted() {
+            SetDetails(dashboard);
+        }
     }
 }
 
 function SetDetails(dashboard) {
     var Vault = dashboard.Vault;
-    var controller = dashboard.CustomData;
-    controller.Vault = Vault;
-    var editor = controller.Invoice;
+    var ObjectVersionProperties = Vault.ObjectPropertyOperations.GetProperties(dashboard.CustomData.ObjectVersions.Item(1).ObjVer);
 
-    // Apply vertical layout.
-    $("body").addClass("mf-layout-vertical");
+    var classID = ObjectVersionProperties.SearchForProperty(MFBuiltInPropertyDefClass).TypedValue.getvalueaslookup().Item;
+    var assocPropDefs = Vault.ClassOperations.GetObjectClass(classID).AssociatedPropertyDefs;
 
-    // Show some information of the document.
-    $('#message_placeholder').text(controller.ObjectVersion.Title + ' (' + controller.ObjectVersion.ObjVer.ID + ')');
-    var ObjectVersionProperties = Vault.ObjectPropertyOperations.GetProperties(controller.ObjectVersion.ObjVer);
-    gUtil = new APUtil(Vault, controller, editor);
+    gUtil = new APUtil();
 
-    controller.Budget = {
-        ObjectVersion: controller.ObjectVersion,
-        ObjectVersionProperties: ObjectVersionProperties,
-        Events: dashboard.Events
-    };
+    var OExpTotalResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
+        FindObjects(Vault, 'vObject.ExpenseTotal', "", "", "", "", "", ""), MFSearchFlagNone, true);
+    var TotalResultsObjVers = OExpTotalResults.GetAsObjectVersions().GetAsObjVers();
+    var TotalProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TotalResultsObjVers);
+    var ctr;
+    var Campuses = [];
+    var ExpenseYears = [];
+    var Cam, ExpYears;
+    for (ctr in TotalProperties) {
+        var Campus = TotalProperties[ctr].SearchForPropertyByAlias(Vault, "vProperty.Campus", true).Value.DisplayValue;
+        if (jQuery.inArray(Campus, Campuses) == -1) {
+            Campuses.push(Campus);
+            Cam += '<option value="' + Campus + '">' + Campus + '</option>';
+        }
+        var ExpenseYear = TotalProperties[ctr].SearchForPropertyByAlias(Vault, "vProperty.ExpenseYear", true).Value.DisplayValue;
+        if (jQuery.inArray(ExpenseYear, ExpenseYears) == -1) {
+            ExpenseYears.push(ExpenseYear);
+            ExpYears += '<option value="' + ExpenseYear + '">' + ExpenseYear + '</option>';
+        }
+    }
 
-    SetBudgetDetails(controller);
+    $('#message_placeholder').text("Budgets Dashboard");
 
-}
+    $('' +
+        '' +
+        '<tbody> ' +
+        '<tr tabIndex="0" class="mf-dynamic-row>' +
+        '    <td class="mf-dynamic-namefield">Campus</td>' +
+        '    <td>' +
+        '       <label for="Campuses">Campus:</label>' +
+        '       <select id="Campuses" onchange=ChangeCampusList(1)>' + Cam +
+        '       </select>' +
+        '	</td>' +
+        '    <td>' +
+        '       <label for="ExpYears">Expense Year:</label>' +
+        '           <select id="ExpYears" onchange=ChangeCampusList(2)>' + ExpYears +
+        '       </select>' +
+        '	</td>' +
+        '</tr></tdoby>'
+    ).appendTo(".panel-container");
 
-
-function SetBudgetDetails(controller) {
-    var editor = controller.Budget;
-    var Vault = controller.Vault;
-
-    CreateMetadataCard(controller, editor);
-    generate_row(editor.table, Vault, editor.ObjectVersionProperties, 'vProperty.Campus');
-    generate_row(editor.table, Vault, editor.ObjectVersionProperties, 'vProperty.ExpenseDate');
-    generate_row(editor.table, Vault, editor.ObjectVersionProperties, 'vProperty.ExpenseTotal');
-
-    editor.table.append(
-        '</tbody>' +
-        '<tbody><tr class="mf-propertygroup-separator" id="propertygroup-title-2-separator-top"><td colSpan="4"></td></tr></tbody>'+
-        '<tbody class= "mf-dynamic-tbody" id = "mf-property-group-2" > ' +
-        '   <tr class="mf-propertygroup-title" id="propertygroup-title-2"><th style="padding-top: 9px; padding-bottom: 9px;" colspan="2">Expense Distribution</th></tr> ' +
-        '   <tr class="mf-propertygroup-separator" id="propertygroup-title-2-separator-bottom"><td colSpan="3"></td></tr> ' +
-        '   <tr><td colspan="2" align="center">' +
-        '   <div class="search-box">' +
-        '   <div class="row">' +
-        '       <div class="col-md-3" style="text-align:right">' +
-        '           <span class="mf-property-0000-label">Search Expense type</span>' +
-        '       </div>' +
-        '       <div class="col-md-9">' +
-        '           <input type="text" id="searchType" class="mf-internal-text mf-property-0000-text-0">' +
-        '           <script>' +
-        '              $(document).ready(function () {' +
-        '               $("#searchType").on("keyup", function () {' +
-        '                   var value = $(this).val().toLowerCase();' +
-        '                   $("#budget_details_table tr").filter(function () {' +
-        '                       $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)' +
-        '                   });' +
-        '               });' +
-        '              });' +
-        '           </script>' +
-        '       </div>' +
-        '   </div>' +
-        '   <br>' +
-        '   <div class="search-list">' +
+    $('<tbody><tr><td colspan="2" align="center">' +
         '       <table width="100%" id="budget_details_table" class="details">' +
         '           <thead><tr><th>Expense Type</th><th>Campus Budget</th><th>Total</th>' +
         '           <th>Remainder</th></thead></tr>' +
-        '       </table>' +
-        '   </div></td></tr></tbody>' + 
-        '');
+        '       </table></td></tr>' +
+        '   </tbody>'
+    ).appendTo(".panel-container");
 
+    //    foreach var
+    //SetBudgetDetails(controller);
+}
+
+function ChangeCampusList(val) {
+    $("#budget_details_table tbody").empty()
+    var cam = document.getElementById("Campuses").value;
+    var year = document.getElementById("ExpYears").value;
     var Total = 0;
     var ArrayVal = [];
-    var TableBody = editor.table.find('#budget_details_table');
+    var TableBody = $('#budget_details_table');
+    TableBody.append("<tbody>");
+
+    var ObjectVersionProperties = gVault.ObjectPropertyOperations.GetProperties(gDashboard.ObjectVersions[0].ObjVer);
+    var CampusName = ObjectVersionProperties.SearchForPropertyByAlias(gVault, "vProperty.campus", true); // current campus name
 
 
-    var OEXTypeResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
-        FindObjects(Vault, 'vObject.ExpenseType', 'vProperty.ExpenseName', MFDatatypeText,""), MFSearchFlagNone, true);
+    var OEXTypeResults = gVault.ObjectSearchOperations.SearchForObjectsByConditions(
+        FindObjects(gVault, 'vObject.ExpenseType', 'vProperty.ExpenseName', "", "", "", "", "", "", MFDatatypeText), MFSearchFlagNone, true);
     var TypeResultsObjVers = OEXTypeResults.GetAsObjectVersions().GetAsObjVers();
+    var TypeProperties = gVault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TypeResultsObjVers);
 
-    var OBudgetResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
-        FindObjects(Vault, 'vObject.ExpenseBudget', 'vProperty.Campus', MFDatatypeLookup, editor.ObjectVersion.ObjVer.ID), MFSearchFlagNone, true);
+    var OBudgetResults = gVault.ObjectSearchOperations.SearchForObjectsByConditions(
+        FindObjects(gVault, 'vObject.ExpenseBudget', 'vProperty.CampusBudget', MFDatatypeText, cam, 'vProperty.ExpenseYear', MFDatatypeInteger, year), MFSearchFlagNone, true);
     var BudgetResultsObjVers = OBudgetResults.GetAsObjectVersions().GetAsObjVers();
 
+    var OExpTotalResults = gVault.ObjectSearchOperations.SearchForObjectsByConditions(
+        FindObjects(gVault, 'vObject.ExpenseTotal', 'vProperty.CampusExpenses', MFDatatypeText, cam,
+            'vProperty.ExpenseYear', MFDatatypeInteger, year), MFSearchFlagNone, true);
+    var TotalResultsObjVers = OExpTotalResults.GetAsObjectVersions().GetAsObjVers();
+
+
     if (OEXTypeResults.Count > 0) {
-        var TypeProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TypeResultsObjVers);
-        var BudgetProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(BudgetResultsObjVers);
+        var TypeProperties = gVault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TypeResultsObjVers);
+        var BudgetProperties = (OBudgetResults.Count > 0) ?
+            gVault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(BudgetResultsObjVers) : "";
+        var TotalProperties = (OExpTotalResults.Count > 0) ?
+            gVault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TotalResultsObjVers) : "";
+
         var formatter = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
         });
 
-        for (var i = 0; i < TypeResultsObjVers.Count; i++) {           
+        for (var i = 0; i < TypeResultsObjVers.Count; i++) {
             var TypeProps = TypeProperties[i][0].Value.DisplayValue.replace(/[ , '/']/g, '');
-            var CampusBudget = BudgetProperties[0].SearchForPropertyByAlias(Vault, "vProperty." +TypeProps, true).Value.DisplayValue;
-            var CampusTotal = editor.ObjectVersionProperties.SearchForPropertyByAlias(Vault, "vProperty." +TypeProps, true).Value.DisplayValue;
+            var CampusBudget = (BudgetProperties == "") ? "NaN" :
+                BudgetProperties[0].SearchForPropertyByAlias(gVault, "vProperty." + TypeProps, true).Value.DisplayValue;
+
+
+            var CampusTotal;
+            if (TotalProperties != "") {
+                CampusTotal = 0;
+                for (var j = 0; j < TotalProperties.Count; j++) {
+                    CampusTotal += parseFloat(TotalProperties[j].SearchForPropertyByAlias(gVault, "vProperty." + TypeProps, true).Value.DisplayValue);
+                }
+            }
             var Remainder = formatter.format(CampusBudget - CampusTotal);
 
             CampusBudget = formatter.format(CampusBudget);
-            CampusTotal = (CampusTotal == "")? "" : formatter.format(CampusTotal);
+            CampusTotal = (CampusTotal == "") ? "" : formatter.format(CampusTotal);
 
             var htmlStr =
                 '<tr>' +
-                //'   <td><input type="text" id="ExpenseType' + i + '" value="' + TypeProps + '" title="' + TypeProps + '"></td > ' +
-                //'   <td><input type="text" id="CampusBudget' + i + '" value="' + CampusBudget + '" title="' + CampusBudget + '"></td > ' +
-                //'   <td><input type="text" id="CampusTotal' + i + '" value="' + CampusTotal + '" title="' + CampusTotal + '"></td > ' +
-                //'   <td><input type="text" id="Remainder' + i + '" value="' + Remainder + '" title="' + Remainder + '"></td > ' +
                 '<td>' + TypeProps + '</td >' +
                 '<td>' + CampusBudget + '</td >' +
                 '<td>' + CampusTotal + '</td >' +
                 '<td>' + Remainder + '</td >' +
-               // '<td class="text-center"><a class="btn btn-info btn - xs" href="#"><span class="glyphicon glyphicon-edit"></span> Edit</a> <a href="#" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove"></span> Del</a></td>' +
+                // '<td class="text-center"><a class="btn btn-info btn - xs" href="#"><span class="glyphicon glyphicon-edit"></span> Edit</a> <a href="#" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove"></span> Del</a></td>' +
                 '</tr>';
             ArrayVal[i] = TypeResultsObjVers[i].ID + ", " + htmlStr;
         }
         var SortedList = gUtil.SortLineNo(ArrayVal).join();
         TableBody.append(SortedList);
     }
+
+}
+
+function SetBudgetDetails(controller) {
+    var Vault = controller.Vault;
+
+    //CreateMetadataCard(controller, editor);
+
+    /*    var OExpYearResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
+            FindObjects(Vault, 'vObject.ExpenseTotal', 'vProperty.ExpenseYear', MFDatatypeInteger, "", "", "", ""), MFSearchFlagNone, true);
+        var OExpYearResultsObjVers = OExpYearResults.GetAsObjectVersions().GetAsObjVers();
+    */
+    //    generate_row(editor.table, Vault, editor.ObjectVersionProperties, 'vProperty.Campus',"");
+
+    //$('<div class="mf-metadatacard mf-mode-properties" id="' + editor.cardname + '"></div>').appendTo(".panel-container");
+
+    /*
+            '</tbody>' +
+            '<tbody><tr class="mf-propertygroup-separator" id="propertygroup-title-2-separator-top"><td colSpan="4"></td></tr></tbody>'+
+            '<tbody class= "mf-dynamic-tbody" id = "mf-property-group-2" > ' +
+            '   <tr class="mf-propertygroup-title" id="propertygroup-title-2"><th style="padding-top: 9px; padding-bottom: 9px;" colspan="2">Expense Distribution</th></tr> ' +
+            '   <tr class="mf-propertygroup-separator" id="propertygroup-title-2-separator-bottom"><td colSpan="3"></td></tr> ' +
+            '   <tr><td colspan="2" align="center">' +
+            '   <div class="search-box">' +
+            '   <div class="row">' +
+            '       <div class="col-md-3" style="text-align:right">' +
+            '           <span class="mf-property-0000-label">Search Expense type</span>' +
+            '       </div>' +
+            '       <div class="col-md-9">' +
+            '           <input type="text" id="searchType" class="mf-internal-text mf-property-0000-text-0">' +
+            '           <script>' +
+            '              $(document).ready(function () {' +
+            '               $("#searchType").on("keyup", function () {' +
+            '                   var value = $(this).val().toLowerCase();' +
+            '                   $("#budget_details_table tr").filter(function () {' +
+            '                       $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)' +
+            '                   });' +
+            '               });' +
+            '              });' +
+            '           </script>' +
+            '       </div>' +
+            '   </div>' +
+            '   <br>' +
+    */
+    /*
+        var Total = 0;
+        var ArrayVal = [];
+        var TableBody = editor.table.find('#budget_details_table');
+    
+        var OEXTypeResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
+            FindObjects(Vault, 'vObject.ExpenseType', 'vProperty.ExpenseName', MFDatatypeText), MFSearchFlagNone, true);
+        var TypeResultsObjVers = OEXTypeResults.GetAsObjectVersions().GetAsObjVers();
+    
+        var OBudgetResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
+            FindObjects(Vault, 'vObject.ExpenseBudget', 'vProperty.Campus', MFDatatypeLookup, editor.ObjectVersion[0].ObjVer.ID,
+                                                    'vProperty.ExpenseYear', MFDatatypeInteger, '2020'), MFSearchFlagNone, true);
+        var BudgetResultsObjVers = OBudgetResults.GetAsObjectVersions().GetAsObjVers();
+    
+        var OExpTotalResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
+            FindObjects(Vault, 'vObject.ExpenseTotal', 'vProperty.Campus', MFDatatypeLookup, editor.ObjectVersion[0].ObjVer.ID,
+                                                    'vProperty.ExpenseYear', MFDatatypeInteger, '2020'), MFSearchFlagNone, true);
+        var TotalResultsObjVers = OExpTotalResults.GetAsObjectVersions().GetAsObjVers();
+    
+    
+        if (OEXTypeResults.Count > 0) {
+            var TypeProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TypeResultsObjVers);
+            var BudgetProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(BudgetResultsObjVers);
+            var TotalProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TotalResultsObjVers);
+            var formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            });
+    
+            for (var i = 0; i < TypeResultsObjVers.Count; i++) {           
+                var TypeProps = TypeProperties[i][0].Value.DisplayValue.replace(/[ , '/']/g, '');
+                var CampusBudget = BudgetProperties[0].SearchForPropertyByAlias(Vault, "vProperty." +TypeProps, true).Value.DisplayValue;
+                var CampusTotal = editor.ObjectVersionProperties.SearchForPropertyByAlias(Vault, "vProperty." +TypeProps, true).Value.DisplayValue;
+                var Remainder = formatter.format(CampusBudget - CampusTotal);
+    
+                CampusBudget = formatter.format(CampusBudget);
+                CampusTotal = (CampusTotal == "")? "" : formatter.format(CampusTotal);
+    
+                var htmlStr =
+                    '<tr>' +
+                    '<td>' + TypeProps + '</td >' +
+                    '<td>' + CampusBudget + '</td >' +
+                    '<td>' + CampusTotal + '</td >' +
+                    '<td>' + Remainder + '</td >' +
+                   // '<td class="text-center"><a class="btn btn-info btn - xs" href="#"><span class="glyphicon glyphicon-edit"></span> Edit</a> <a href="#" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove"></span> Del</a></td>' +
+                    '</tr>';
+                ArrayVal[i] = TypeResultsObjVers[i].ID + ", " + htmlStr;
+            }
+            var SortedList = gUtil.SortLineNo(ArrayVal).join();
+            TableBody.append(SortedList);
+        }
+        */
 }
 
 // A helper function to compile the search conditions needed for running the search in the
 // vault using M-Files API.
-function FindObjects(Vault, OTAlias, PDAlias, PDType, Value) {
+function FindObjects(Vault, OTAlias, PDAlias1, PDType1, Value1, PDAlias2, PDType2, Value2) {
     // We need a few IDs based on aliases defined in the M-Files Admin tool for object types, properties, etc.
     // Note that all these methods could be run asynchronously as well, if it seems they take a long time and block the UI.
     var OT = Vault.ObjectTypeOperations.GetObjectTypeIDByAlias(OTAlias);
-    var PD = Vault.PropertyDefOperations.GetPropertyDefIDByAlias(PDAlias);
+    var PD1 = Vault.PropertyDefOperations.GetPropertyDefIDByAlias(PDAlias1);
+    if (PDAlias2 != "") var PD2 = Vault.PropertyDefOperations.GetPropertyDefIDByAlias(PDAlias2);
 
     var oSC = new MFiles.SearchCondition();
     var oSCs = new MFiles.SearchConditions();
@@ -162,11 +279,18 @@ function FindObjects(Vault, OTAlias, PDAlias, PDType, Value) {
     oSC.TypedValue.SetValue(MFDatatypeLookup, OT);
     oSCs.Add(-1, oSC);
 
-    if (Value != "") {
+
+    if (Value1 != "") {
         // Search condition that defines that the object must refer to the given object.
+        oSC.ConditionType = MFConditionTypeContains;
+        oSC.Expression.DataPropertyValuePropertyDef = PD1;
+        oSC.TypedValue.SetValue(PDType1, Value1);
+        oSCs.Add(-1, oSC);
+    }
+    if (Value2 != "") {
         oSC.ConditionType = MFConditionTypeEqual;
-        oSC.Expression.DataPropertyValuePropertyDef = PD;
-        oSC.TypedValue.SetValue(PDType, Value);
+        oSC.Expression.DataPropertyValuePropertyDef = PD2;
+        oSC.TypedValue.SetValue(PDType2, Value2);
         oSCs.Add(-1, oSC);
     }
 
@@ -174,20 +298,29 @@ function FindObjects(Vault, OTAlias, PDAlias, PDType, Value) {
 }
 
 
-function generate_row(tableID, Vault, ObjVerProperties, propertyAlias) {
-    var propertyNumber = ObjVerProperties.SearchForPropertyByAlias(Vault, propertyAlias, true).PropertyDef;
-    var PropertyDef = Vault.PropertyDefOperations.GetPropertyDef(propertyNumber);
-    var propertyName = PropertyDef.Name;
-    var propertyType = PropertyDef.DataType;
-    var propertyValue = ObjVerProperties.SearchForPropertyByAlias(Vault, propertyAlias, true).Value.DisplayValue;
-    var propertyEditable = (PropertyDef.AutomaticValueType == 0 ? 1 : 0);
-    var classID = ObjVerProperties.SearchForProperty(MFBuiltInPropertyDefClass).TypedValue.getvalueaslookup().Item;
-    var assocPropDefs = Vault.ClassOperations.GetObjectClass(classID).AssociatedPropertyDefs;
-    var propertyRequired = gUtil.isRequired(assocPropDefs, propertyNumber);
-    if (propertyType == 8)
-        propertyValue = ((propertyValue == 'Yes') ? 'Yes' : 'No');
-    if (propertyType == 3)
-        propertyValue = '$' + propertyValue;
+function generate_row(tableID, Vault, ObjVerProperties, propertyAlias, type) {
+    var propertyNumber;
+    var propertyName;
+
+    if (type == 105) {
+        propertyName = "Campus";
+        propertyValue = ObjVerProperties[0].typedValue.DisplayValue;
+    }
+    else {
+        propertyNumber = ObjVerProperties.SearchForPropertyByAlias(Vault, propertyAlias, true).PropertyDef;
+        PropertyDef = Vault.PropertyDefOperations.GetPropertyDef(propertyNumber);
+        var propertyName = PropertyDef.Name;
+        var propertyType = PropertyDef.DataType;
+        var propertyValue = ObjVerProperties.SearchForPropertyByAlias(Vault, propertyAlias, true).Value.DisplayValue;
+        var propertyEditable = (PropertyDef.AutomaticValueType == 0 ? 1 : 0);
+        var classID = ObjVerProperties.SearchForProperty(MFBuiltInPropertyDefClass).TypedValue.getvalueaslookup().Item;
+        var assocPropDefs = Vault.ClassOperations.GetObjectClass(classID).AssociatedPropertyDefs;
+        var propertyRequired = gUtil.isRequired(assocPropDefs, propertyNumber);
+        if (propertyType == 8)
+            propertyValue = ((propertyValue == 'Yes') ? 'Yes' : 'No');
+        if (propertyType == 3)
+            propertyValue = '$' + propertyValue;
+    }
     // Create container element
     var propertyLine = $('<tr>');
     propertyLine.addClass('mf-dynamic-row mf-property-' + propertyNumber);
@@ -215,6 +348,7 @@ function generate_row(tableID, Vault, ObjVerProperties, propertyAlias) {
                 $(this).removeClass("ui-footer-hover");
         }
     );
+
 
 
     propertyLine.append(
