@@ -8,6 +8,7 @@ function OnNewDashboard(dashboard) {
     gVault = dashboard.Vault;
     gDashboard = dashboard.CustomData;
     var tab = dashboard.Parent;
+    //$('#message_placeholder').text("Budgets Dashboard");
 
     if (null != dashboard.CustomData && null != dashboard.CustomData.ObjectVersions) {
         if (dashboard.CustomData.ObjectVersions.Count == 0) {
@@ -40,7 +41,8 @@ function SetDetails(dashboard) {
     var ctr;
     var Campuses = [];
     var ExpenseYears = [];
-    var Cam, ExpYears;
+    var Cam = "<option selected>select...</option>";
+    var ExpYears = "<option selected>select...</option>";
     for (ctr in TotalProperties) {
         var Campus = TotalProperties[ctr].SearchForPropertyByAlias(Vault, "vProperty.Campus", true).Value.DisplayValue;
         if (jQuery.inArray(Campus, Campuses) == -1) {
@@ -54,50 +56,81 @@ function SetDetails(dashboard) {
         }
     }
 
-    $('#message_placeholder').text("Budgets Dashboard");
-
-    $('' +
-        '' +
-        '<tbody> ' +
-        '<tr tabIndex="0" class="mf-dynamic-row>' +
-        '    <td class="mf-dynamic-namefield">Campus</td>' +
-        '    <td>' +
-        '       <label for="Campuses">Campus:</label>' +
-        '       <select id="Campuses" onchange=ChangeCampusList(1)>' + Cam +
+    $(
+        '<div class="row"><div class="col-md-12">' +
+        '<h4 style="padding-top:30px; padding-bottom:30px">Budgets Dashboard</h4></div>' +
+        '    <div class="col-md-5 mb-3">' +
+        '        <label for="Campuses">Campus:</label>' +
+        '        <select class="form-control form-control-sm" id="Campuses" onchange=ChangeCampusList(1)>' + Cam +
         '       </select>' +
-        '	</td>' +
-        '    <td>' +
+        '    </div>' +
+        '    <div class="col-md-5 mb-3">' +
         '       <label for="ExpYears">Expense Year:</label>' +
-        '           <select id="ExpYears" onchange=ChangeCampusList(2)>' + ExpYears +
+        '       <select class="form-control form-control-sm" id="ExpYears" onchange=ChangeCampusList(2)>' + ExpYears +
         '       </select>' +
-        '	</td>' +
-        '</tr></tdoby>'
-    ).appendTo(".panel-container");
+        '    </div>' +
+        '       <button class="align-self-end btn btn-outline-secondary btn-sm m-3" style="width: 125px;" type="button" onclick="Reset()">Reset</button>' +
+        '</div>'
+    ).appendTo(".container");
 
-    $('<tbody><tr><td colspan="2" align="center">' +
-        '       <table width="100%" id="budget_details_table" class="details">' +
-        '           <thead><tr><th>Expense Type</th><th>Campus Budget</th><th>Total</th>' +
-        '           <th>Remainder</th></thead></tr>' +
-        '       </table></td></tr>' +
-        '   </tbody>'
-    ).appendTo(".panel-container");
+    $(
+        /*'<div class="row"><div class="col-md-12">' +
+        '<h4 style="padding-top:50px">Budgets Dashboard</h4>' +
+        '   <table class="table" id="pt-select" cellspacing="0">' +
+        '       <thead>' +
+        '          <tr style="border-top:none" class="mf-dynamic-row">' +
+        '           <td>' +
+        '               <label for="Campuses">Campus:</label></td>' +
+        '           <td><select class="form-control form-control-sm" id="Campuses" onchange=ChangeCampusList(1)>' + Cam +
+        '               </select>' +
+        '	        </td>' +
+        '           <td>' +
+        '               <label for="ExpYears">Expense Year:</label></td><td>' +
+        '               <select class="form-control form-control-sm" id="ExpYears" onchange=ChangeCampusList(2)>' + ExpYears +
+        '           </select>' +
+        '	        </td>' +
+        '           </tr>' +
+        '       </thead>' +
+        '       </tbody>' +
+        '   </table>' +
+        '</div></div>' +*/
 
-    //    foreach var
-    //SetBudgetDetails(controller);
+        '<div class="row"><div class="col-md-12"><div>' +
+        '   <table class="table table-striped table-bordered table-hover table-md" id="budget_details_table" style="font-size: 13px;"> ' +
+        '       <thead style="background-color:#318CCC; color:#FFFFFF; font-weight:100px">' +
+        '          <tr><th width="25%">Expense Type</th>' +
+        '               <th width="25%">Campus Budget</th>' +
+        '               <th width="25%">Total</th>' +
+        '               <th width="25%">Remainder</th></thead></tr>' +
+        '       </thead>' +
+        '   </table>' +
+        '</div></div></div>'
+    ).appendTo(".container");
+
+}
+function Reset() {
+    $("#Campuses")[0].selectedIndex = 0;
+    $("#ExpYears")[0].selectedIndex = 0;
+    $("#budget_details_table tbody").empty()
 }
 
 function ChangeCampusList(val) {
+
+    //alert(val);
     $("#budget_details_table tbody").empty()
-    var cam = document.getElementById("Campuses").value;
-    var year = document.getElementById("ExpYears").value;
-    var Total = 0;
+
+    var cam = $("#Campuses")[0];
+    var year = $("#ExpYears")[0];
+    if (cam.selectedIndex == 0 || year.selectedIndex == 0) return;
     var ArrayVal = [];
+    cam = cam.value;
+    year = year.value;
+
     var TableBody = $('#budget_details_table');
     TableBody.append("<tbody>");
 
     var ObjectVersionProperties = gVault.ObjectPropertyOperations.GetProperties(gDashboard.ObjectVersions[0].ObjVer);
     var CampusName = ObjectVersionProperties.SearchForPropertyByAlias(gVault, "vProperty.campus", true); // current campus name
-
 
     var OEXTypeResults = gVault.ObjectSearchOperations.SearchForObjectsByConditions(
         FindObjects(gVault, 'vObject.ExpenseType', 'vProperty.ExpenseName', "", "", "", "", "", "", MFDatatypeText), MFSearchFlagNone, true);
@@ -128,28 +161,31 @@ function ChangeCampusList(val) {
 
         for (var i = 0; i < TypeResultsObjVers.Count; i++) {
             var TypeProps = TypeProperties[i][0].Value.DisplayValue.replace(/[ , '/']/g, '');
-            var CampusBudget = (BudgetProperties == "") ? "NaN" :
-                BudgetProperties[0].SearchForPropertyByAlias(gVault, "vProperty." + TypeProps, true).Value.DisplayValue;
-
+            var CampusBudget = (BudgetProperties == "") ? "NaN" : BudgetProperties[0].SearchForPropertyByAlias(gVault, "vProperty." + TypeProps, true).TypedValue.Value;
+            if (CampusBudget == null) {
+                CampusBudget = "unlimited";
+            }
 
             var CampusTotal;
             if (TotalProperties != "") {
                 CampusTotal = 0;
                 for (var j = 0; j < TotalProperties.Count; j++) {
-                    CampusTotal += parseFloat(TotalProperties[j].SearchForPropertyByAlias(gVault, "vProperty." + TypeProps, true).Value.DisplayValue);
+                    CampusTotal += TotalProperties[j].SearchForPropertyByAlias(gVault, "vProperty." + TypeProps, true).TypedValue.Value;
                 }
             }
-            var Remainder = formatter.format(CampusBudget - CampusTotal);
-
-            CampusBudget = formatter.format(CampusBudget);
+            var Remainder = "NaN";
+            if (CampusBudget != "unlimited") {
+                Remainder = formatter.format(CampusBudget - CampusTotal);
+                CampusBudget = formatter.format(CampusBudget);
+            }
             CampusTotal = (CampusTotal == "") ? "" : formatter.format(CampusTotal);
 
             var htmlStr =
                 '<tr>' +
                 '<td>' + TypeProps + '</td >' +
-                '<td>' + CampusBudget + '</td >' +
-                '<td>' + CampusTotal + '</td >' +
-                '<td>' + Remainder + '</td >' +
+                '<td><span style="float: right;">' + CampusBudget + '</span></td>' +
+                '<td><span style="float: right;">' + CampusTotal + '</span></td>' +
+                '<td><span style="float: right;">' + Remainder + '</span></td>' +
                 // '<td class="text-center"><a class="btn btn-info btn - xs" href="#"><span class="glyphicon glyphicon-edit"></span> Edit</a> <a href="#" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove"></span> Del</a></td>' +
                 '</tr>';
             ArrayVal[i] = TypeResultsObjVers[i].ID + ", " + htmlStr;
@@ -158,101 +194,6 @@ function ChangeCampusList(val) {
         TableBody.append(SortedList);
     }
 
-}
-
-function SetBudgetDetails(controller) {
-    var Vault = controller.Vault;
-
-    //CreateMetadataCard(controller, editor);
-
-    /*    var OExpYearResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
-            FindObjects(Vault, 'vObject.ExpenseTotal', 'vProperty.ExpenseYear', MFDatatypeInteger, "", "", "", ""), MFSearchFlagNone, true);
-        var OExpYearResultsObjVers = OExpYearResults.GetAsObjectVersions().GetAsObjVers();
-    */
-    //    generate_row(editor.table, Vault, editor.ObjectVersionProperties, 'vProperty.Campus',"");
-
-    //$('<div class="mf-metadatacard mf-mode-properties" id="' + editor.cardname + '"></div>').appendTo(".panel-container");
-
-    /*
-            '</tbody>' +
-            '<tbody><tr class="mf-propertygroup-separator" id="propertygroup-title-2-separator-top"><td colSpan="4"></td></tr></tbody>'+
-            '<tbody class= "mf-dynamic-tbody" id = "mf-property-group-2" > ' +
-            '   <tr class="mf-propertygroup-title" id="propertygroup-title-2"><th style="padding-top: 9px; padding-bottom: 9px;" colspan="2">Expense Distribution</th></tr> ' +
-            '   <tr class="mf-propertygroup-separator" id="propertygroup-title-2-separator-bottom"><td colSpan="3"></td></tr> ' +
-            '   <tr><td colspan="2" align="center">' +
-            '   <div class="search-box">' +
-            '   <div class="row">' +
-            '       <div class="col-md-3" style="text-align:right">' +
-            '           <span class="mf-property-0000-label">Search Expense type</span>' +
-            '       </div>' +
-            '       <div class="col-md-9">' +
-            '           <input type="text" id="searchType" class="mf-internal-text mf-property-0000-text-0">' +
-            '           <script>' +
-            '              $(document).ready(function () {' +
-            '               $("#searchType").on("keyup", function () {' +
-            '                   var value = $(this).val().toLowerCase();' +
-            '                   $("#budget_details_table tr").filter(function () {' +
-            '                       $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)' +
-            '                   });' +
-            '               });' +
-            '              });' +
-            '           </script>' +
-            '       </div>' +
-            '   </div>' +
-            '   <br>' +
-    */
-    /*
-        var Total = 0;
-        var ArrayVal = [];
-        var TableBody = editor.table.find('#budget_details_table');
-    
-        var OEXTypeResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
-            FindObjects(Vault, 'vObject.ExpenseType', 'vProperty.ExpenseName', MFDatatypeText), MFSearchFlagNone, true);
-        var TypeResultsObjVers = OEXTypeResults.GetAsObjectVersions().GetAsObjVers();
-    
-        var OBudgetResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
-            FindObjects(Vault, 'vObject.ExpenseBudget', 'vProperty.Campus', MFDatatypeLookup, editor.ObjectVersion[0].ObjVer.ID,
-                                                    'vProperty.ExpenseYear', MFDatatypeInteger, '2020'), MFSearchFlagNone, true);
-        var BudgetResultsObjVers = OBudgetResults.GetAsObjectVersions().GetAsObjVers();
-    
-        var OExpTotalResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
-            FindObjects(Vault, 'vObject.ExpenseTotal', 'vProperty.Campus', MFDatatypeLookup, editor.ObjectVersion[0].ObjVer.ID,
-                                                    'vProperty.ExpenseYear', MFDatatypeInteger, '2020'), MFSearchFlagNone, true);
-        var TotalResultsObjVers = OExpTotalResults.GetAsObjectVersions().GetAsObjVers();
-    
-    
-        if (OEXTypeResults.Count > 0) {
-            var TypeProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TypeResultsObjVers);
-            var BudgetProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(BudgetResultsObjVers);
-            var TotalProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TotalResultsObjVers);
-            var formatter = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-            });
-    
-            for (var i = 0; i < TypeResultsObjVers.Count; i++) {           
-                var TypeProps = TypeProperties[i][0].Value.DisplayValue.replace(/[ , '/']/g, '');
-                var CampusBudget = BudgetProperties[0].SearchForPropertyByAlias(Vault, "vProperty." +TypeProps, true).Value.DisplayValue;
-                var CampusTotal = editor.ObjectVersionProperties.SearchForPropertyByAlias(Vault, "vProperty." +TypeProps, true).Value.DisplayValue;
-                var Remainder = formatter.format(CampusBudget - CampusTotal);
-    
-                CampusBudget = formatter.format(CampusBudget);
-                CampusTotal = (CampusTotal == "")? "" : formatter.format(CampusTotal);
-    
-                var htmlStr =
-                    '<tr>' +
-                    '<td>' + TypeProps + '</td >' +
-                    '<td>' + CampusBudget + '</td >' +
-                    '<td>' + CampusTotal + '</td >' +
-                    '<td>' + Remainder + '</td >' +
-                   // '<td class="text-center"><a class="btn btn-info btn - xs" href="#"><span class="glyphicon glyphicon-edit"></span> Edit</a> <a href="#" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove"></span> Del</a></td>' +
-                    '</tr>';
-                ArrayVal[i] = TypeResultsObjVers[i].ID + ", " + htmlStr;
-            }
-            var SortedList = gUtil.SortLineNo(ArrayVal).join();
-            TableBody.append(SortedList);
-        }
-        */
 }
 
 // A helper function to compile the search conditions needed for running the search in the
@@ -297,136 +238,3 @@ function FindObjects(Vault, OTAlias, PDAlias1, PDType1, Value1, PDAlias2, PDType
     return oSCs;
 }
 
-
-function generate_row(tableID, Vault, ObjVerProperties, propertyAlias, type) {
-    var propertyNumber;
-    var propertyName;
-
-    if (type == 105) {
-        propertyName = "Campus";
-        propertyValue = ObjVerProperties[0].typedValue.DisplayValue;
-    }
-    else {
-        propertyNumber = ObjVerProperties.SearchForPropertyByAlias(Vault, propertyAlias, true).PropertyDef;
-        PropertyDef = Vault.PropertyDefOperations.GetPropertyDef(propertyNumber);
-        var propertyName = PropertyDef.Name;
-        var propertyType = PropertyDef.DataType;
-        var propertyValue = ObjVerProperties.SearchForPropertyByAlias(Vault, propertyAlias, true).Value.DisplayValue;
-        var propertyEditable = (PropertyDef.AutomaticValueType == 0 ? 1 : 0);
-        var classID = ObjVerProperties.SearchForProperty(MFBuiltInPropertyDefClass).TypedValue.getvalueaslookup().Item;
-        var assocPropDefs = Vault.ClassOperations.GetObjectClass(classID).AssociatedPropertyDefs;
-        var propertyRequired = gUtil.isRequired(assocPropDefs, propertyNumber);
-        if (propertyType == 8)
-            propertyValue = ((propertyValue == 'Yes') ? 'Yes' : 'No');
-        if (propertyType == 3)
-            propertyValue = '$' + propertyValue;
-    }
-    // Create container element
-    var propertyLine = $('<tr>');
-    propertyLine.addClass('mf-dynamic-row mf-property-' + propertyNumber);
-    propertyLine.attr('id', propertyNumber)
-    // Check if field is editable. If it is, add class 'mf-editable'
-    if (propertyEditable)
-        propertyLine.addClass('mf-editable');
-    //	$(tableID).append(propertyLine);
-    tableID.append(propertyLine);
-
-    // Add hover handler (IE 10 css pseudo selector :hover is not detecting mouse leave events)
-    propertyLine.hover(
-        function () {
-
-            // Set the hover theme. The special theme is set for workflow and workstates properties.
-            $(this).addClass("ui-state-hover");
-            if (propertyNumber == 38 || propertyNumber == 99)
-                $(this).addClass("ui-footer-hover");
-        },
-        function () {
-
-            // Remove the hover theme, as well as the special theme workflow and workstate properties.
-            $(this).removeClass("ui-state-hover");
-            if (propertyNumber == 38 || propertyNumber == 99)
-                $(this).removeClass("ui-footer-hover");
-        }
-    );
-
-
-
-    propertyLine.append(
-        '        <td class="mf-dynamic-namefield">' +
-        '            <div>' +
-        '                <span class="mf-property-' + propertyNumber + '-label">' + propertyName + '</span>' +
-        '                <span class="mf-required-indicator">*</span>' +
-        '            </div>' +
-        '        </td>' +
-        '        <td class="mf-dynamic-controlfield">' +
-        '            <div class="mf-control mf-dynamic-control mf-text">' +
-        '                <div class="mf-internal-container">' +
-        '                    <div class="mf-internal-text mf-property-' + propertyNumber + '-text-0">' + propertyValue + '</div>' +
-        '                </div>' +
-        '            </div>' +
-        '        </td>'
-    );
-
-
-    if (!propertyRequired)
-        requiredspan = propertyLine.find('.mf-required-indicator').hide();
-}
-
-function CreateMetadataCard(controller, editor) {
-    controller.editor = editor;
-    var cardid = (typeof controller.cards === 'undefined') ? 0 : controller.cards + 1;
-    controller.cards = cardid;
-    editor.cardname = 'metadatacard-' + cardid;
-
-
-    $('<div class="mf-metadatacard mf-mode-properties" id="' + editor.cardname + '"></div>').appendTo(".panel-container");
-
-    var MetaCard = $('div #' + editor.cardname);
-    MetaCard.addClass("mf-card-docked");
-
-    var mfcontentDiv = $('<div>');
-    mfcontentDiv.addClass('mf-content');
-    mfcontentDiv.css('height', '100%');
-    MetaCard.append(mfcontentDiv);
-
-    var mfpropertiesviewDiv = $('<div>');
-    mfpropertiesviewDiv.attr('id', 'mf-properties-view')
-    mfcontentDiv.append(mfpropertiesviewDiv);
-
-    var mfdynamiccontrolsDiv = $('<div>');
-    mfdynamiccontrolsDiv.addClass('mf-dynamic-controls');
-    mfpropertiesviewDiv.append(mfdynamiccontrolsDiv);
-
-    var mfinternaldynamiccontrolsDiv = $('<div>');
-    mfinternaldynamiccontrolsDiv.addClass('mf-internal-dynamic-controls');
-    mfdynamiccontrolsDiv.append(mfinternaldynamiccontrolsDiv);
-
-    var scroll = $(window).outerHeight() - $("#mf-footer").outerHeight() - $("#titleLabel").height() - 20;
-    var mfsectionDiv = $('<div>');
-    mfsectionDiv.addClass('mf-section mf-section-properties');
-    mfinternaldynamiccontrolsDiv.append(mfsectionDiv);
-
-    var mfscrollableDiv = $('<div>');
-    mfscrollableDiv.addClass('ui-scrollable');
-    mfscrollableDiv.css('height', scroll + 'px');
-    mfsectionDiv.append(mfscrollableDiv);
-
-    var mfsectioncontentDiv = $('<div>');
-    mfsectioncontentDiv.addClass('mf-section-content mf-dynamic-properties');
-    mfsectioncontentDiv.attr('id', 'a' + cardid);
-    //mfsectioncontentDiv.attr('style', 'padding:10px 30px 50px 30px');
-    mfscrollableDiv.append(mfsectioncontentDiv);
-
-    var mfdynamicTab = $('<table>');
-    mfdynamicTab.addClass('mf-dynamic-table');
-    mfdynamicTab.attr('id', 'mf-property-table');
-    mfsectioncontentDiv.append(mfdynamicTab);
-
-    var mfdynamicTabBody = $('<tbody>');
-    mfdynamicTabBody.addClass('mf-dynamic-tbody mf-propertygroup-no-header');
-    mfdynamicTabBody.attr('id', 'mf-property-group-1');
-    mfdynamicTab.append(mfdynamicTabBody);
-
-    editor.metadatacard = MetaCard;
-    editor.table = $('div #' + editor.cardname + ' #mf-property-table');
-}

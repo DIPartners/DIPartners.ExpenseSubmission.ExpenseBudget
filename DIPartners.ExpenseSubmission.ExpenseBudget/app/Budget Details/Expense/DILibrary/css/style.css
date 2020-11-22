@@ -1,95 +1,34 @@
+
 /* Style for metadata card. */
 body {
-	font-family: Segoe UI, Tahoma, Arial, sans-serif !important;
+    font-family: Segoe UI, Tahoma, Arial, sans-serif !important;
 }
+
 .page-container {
     margin: 0px;
+    height: 100%;
 }
 
 html.mf-ltr div.mf-internal-text, html.mf-ltr span.mf-internal-text, html.mf-ltr div.mf-internal-text-state-prop, html.mf-ltr span.mf-internal-text-state-prop, html.mf-ltr .mf-autovalue {
-	padding: 6px 0px 2px 30px !important;
+    padding: 6px 0px 2px 30px !important;
 }
 
 .ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus {
-	background-position: 0 -15px;
-	color: #333;
-	text-decoration: none;
+    background-position: 0 -15px;
+    color: #333;
+    text-decoration: none;
 }
 
 label {
-    /*font-family:Segoe UI, Tahoma, Arial, sans-serif;*/ 
+    /*font-family:Segoe UI, Tahoma, Arial, sans-serif;*/
     color: #000000;
     display: block;
 }
+
 .panel-container {
     display: flex;
     flex-direction: row;
     border: 1px solid silver;
     overflow: hidden;
     height: 100%;
-}
-
-.details th, .details td {
-	border: 1px solid rgb(109, 109, 109);
-	padding: 5px 5px 5px 5px;
-}
-
-.details tr:nth-child(even) {
-	background-color: #eff5fa;
-}
-
-.details th {
-	background-color: #c9c9ce;
-	color: rgb(88, 88, 88);
-	/*font-size: 1.3vw;*/
-}
-
-.details td {
-	color: black !important;
-}
-
-.details tr {
-	height: 35px;
-}
-
-.details td input {
-	outline: none !important;
-	border-color: transparent !important;
-	background-color: transparent;
-}
-
-#budget_details_table tr td:nth-child(n+2) {
-	text-align: right !important;
-}
-
-#budget_details_table th{
-	text-align: center;
-}
-
-.search-table {
-	padding: 10%;
-	margin-top: -6%;
-}
-
-.search-box {
-/*	background: #c1c1c1;
-	border: 1px solid #ababab;
-*/	padding: 3%;
-}
-
-.search-box input:focus {
-	box-shadow: none;
-	border: 2px solid #eeeeee;
-}
-
-.search-list {
-	background: #fff;
-	border: 1px solid #ababab;
-	border-top: none;
-}
-
-.search-list h3 {
-	background: #eee;
-	padding: 3%;
-	margin-bottom: 0%;
 }
