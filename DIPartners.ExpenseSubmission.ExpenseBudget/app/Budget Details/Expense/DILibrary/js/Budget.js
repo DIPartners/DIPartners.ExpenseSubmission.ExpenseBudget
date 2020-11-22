@@ -1,21 +1,17 @@
 //const { error } = require("jquery");
 var gVault;
 var gDashboard;
-var gUtil;
 
 // Entry point of the dashboard.
 function OnNewDashboard(dashboard) {
     gVault = dashboard.Vault;
     gDashboard = dashboard.CustomData;
     var tab = dashboard.Parent;
-    //$('#message_placeholder').text("Budgets Dashboard");
 
     if (null != dashboard.CustomData && null != dashboard.CustomData.ObjectVersions) {
         if (dashboard.CustomData.ObjectVersions.Count == 0) {
             return;
         }
-        // Initialize console.
-        console.initialize(tab.ShellFrame.ShellUI, "Budget");
 
         // Some things are ready only after the dashboard has started.
         dashboard.Events.Register(MFiles.Event.Started, OnStarted);
@@ -31,8 +27,6 @@ function SetDetails(dashboard) {
 
     var classID = ObjectVersionProperties.SearchForProperty(MFBuiltInPropertyDefClass).TypedValue.getvalueaslookup().Item;
     var assocPropDefs = Vault.ClassOperations.GetObjectClass(classID).AssociatedPropertyDefs;
-
-    gUtil = new APUtil();
 
     var OExpTotalResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
         FindObjects(Vault, 'vObject.ExpenseTotal', "", "", "", "", "", ""), MFSearchFlagNone, true);
@@ -70,31 +64,7 @@ function SetDetails(dashboard) {
         '       </select>' +
         '    </div>' +
         '       <button class="align-self-end btn btn-outline-secondary btn-sm m-3" style="width: 125px;" type="button" onclick="Reset()">Reset</button>' +
-        '</div>'
-    ).appendTo(".container");
-
-    $(
-        /*'<div class="row"><div class="col-md-12">' +
-        '<h4 style="padding-top:50px">Budgets Dashboard</h4>' +
-        '   <table class="table" id="pt-select" cellspacing="0">' +
-        '       <thead>' +
-        '          <tr style="border-top:none" class="mf-dynamic-row">' +
-        '           <td>' +
-        '               <label for="Campuses">Campus:</label></td>' +
-        '           <td><select class="form-control form-control-sm" id="Campuses" onchange=ChangeCampusList(1)>' + Cam +
-        '               </select>' +
-        '	        </td>' +
-        '           <td>' +
-        '               <label for="ExpYears">Expense Year:</label></td><td>' +
-        '               <select class="form-control form-control-sm" id="ExpYears" onchange=ChangeCampusList(2)>' + ExpYears +
-        '           </select>' +
-        '	        </td>' +
-        '           </tr>' +
-        '       </thead>' +
-        '       </tbody>' +
-        '   </table>' +
-        '</div></div>' +*/
-
+        '</div>' +
         '<div class="row"><div class="col-md-12"><div>' +
         '   <table class="table table-striped table-bordered table-hover table-md" id="budget_details_table" style="font-size: 13px;"> ' +
         '       <thead style="background-color:#318CCC; color:#FFFFFF; font-weight:100px">' +
@@ -108,15 +78,9 @@ function SetDetails(dashboard) {
     ).appendTo(".container");
 
 }
-function Reset() {
-    $("#Campuses")[0].selectedIndex = 0;
-    $("#ExpYears")[0].selectedIndex = 0;
-    $("#budget_details_table tbody").empty()
-}
 
 function ChangeCampusList(val) {
 
-    //alert(val);
     $("#budget_details_table tbody").empty()
 
     var cam = $("#Campuses")[0];
@@ -177,21 +141,31 @@ function ChangeCampusList(val) {
             if (CampusBudget != "unlimited") {
                 Remainder = formatter.format(CampusBudget - CampusTotal);
                 CampusBudget = formatter.format(CampusBudget);
-            }
+            } else Remainder = "unlimited";
             CampusTotal = (CampusTotal == "") ? "" : formatter.format(CampusTotal);
 
             var htmlStr =
                 '<tr>' +
                 '<td>' + TypeProps + '</td >' +
-                '<td><span style="float: right;">' + CampusBudget + '</span></td>' +
-                '<td><span style="float: right;">' + CampusTotal + '</span></td>' +
-                '<td><span style="float: right;">' + Remainder + '</span></td>' +
-                // '<td class="text-center"><a class="btn btn-info btn - xs" href="#"><span class="glyphicon glyphicon-edit"></span> Edit</a> <a href="#" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove"></span> Del</a></td>' +
+                '<td><span id="budget' + i + '" style="float: right;">' + CampusBudget + '</span></td>' +
+                '<td><span id="total' + i + '" style="float: right;">' + CampusTotal + '</span></td>' +
+                '<td><span id="remainder' + i + '" style="float: right;">' + Remainder + '</span></td>' +
                 '</tr>';
+
+            //if (temp < 0) $("#n-sign").css('color', '#f00');
             ArrayVal[i] = TypeResultsObjVers[i].ID + ", " + htmlStr;
         }
-        var SortedList = gUtil.SortLineNo(ArrayVal).join();
+        var SortedList = SortLineNo(ArrayVal).join();
         TableBody.append(SortedList);
+
+        for (var j = 0; j < TypeResultsObjVers.Count; j++) {
+            var num = $("#remainder" + j).text();
+            if (num.indexOf('(') == 0) // found
+                $("#remainder" + j).css('color', '#f00');
+            if ($("#budget" + j).text() == "NaN") $("#budget" + j).css('color', '#cad2f3');
+            if ($("#total" + j).text() == "NaN") $("#total" + j).css('color', '#cad2f3');
+            if ($("#remainder" + j).text() == "NaN") $("#remainder" + j).css('color', '#cad2f3');
+        }
     }
 
 }
@@ -238,3 +212,15 @@ function FindObjects(Vault, OTAlias, PDAlias1, PDType1, Value1, PDAlias2, PDType
     return oSCs;
 }
 
+function Reset() {
+    $("#Campuses")[0].selectedIndex = 0;
+    $("#ExpYears")[0].selectedIndex = 0;
+    $("#budget_details_table tbody").empty()
+}
+
+function SortLineNo(ArrayVal) {
+    ArrayVal.sort(function (a, b) {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+    });
+    return ArrayVal;
+};
