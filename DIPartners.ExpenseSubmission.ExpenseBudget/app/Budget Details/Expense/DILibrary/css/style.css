@@ -26,3 +26,11 @@ th {
 .col-md-12 {
     padding-left: 0px !important;
 }
+
+tfoot {
+    background-color: #318CCC !important;
+    color: white;
+    font-size: 15px !important;
+    font-weight: 600;
+    width: 25%;
+}
