@@ -32,32 +32,18 @@ function SetDetails(dashboard) {
     }
 
     $('<div class="row">' +
-        '<div class="col-md-12"><h4 style="padding-top:30px; padding-bottom:30px">Budgets Dashboard</h4></div>' +
-        /*       '<div class="form-group pr-5">' +
-               '   <label class="d-inline-block pr-2" for="Campuses">Campus:</label>' +
-               '   <select class="form-control form-control-sm d-inline-block" style="width: auto;" id="Campuses" onchange="GetExpenseYear()">' + Cam +
-               '   </select>' +
-               '</div>' +
-               '<div  class="form-group pr-5">' +
-               '   <label class="d-inline-block pr-2" for="Campuses">Expense Year:</label>' +
-               '   <select class="form-control form-control-sm d-inline-block" style="width: auto;" id="ExpYears" onchange="ChangeList()"></select>' +
-               '</div>' +
-       */
-        '<div class="form-group form-inline col-md-4 mb-3 d-flex">' +
-        '   <label class="d-inline-block pr-2" for="Campuses">Campus:</label>' +
-        '   <select class="form-control form-control-sm" id="Campuses" onchange=GetExpenseYear()>' + Cam +
-        '   </select>' +
-        '</div>' +
-        '<div class="form-group form-inline col-md-3 mb-3 d-flex">' +
-        '   <label class="d-inline-block pr-2" for="ExpYears">Expense Year:</label>' +
-        '   <select class="form-control form-control-sm" id="ExpYears" onchange=ChangeList()></select>' +
-        '</div>' +
-        //        '<div class="form-group form-inline col-md-3">' +
-        //        '   <button type="button" class="btn btn-sm btn-outline-secondary mb-3" style="vertical-align:bottom" onclick="Refresh()">Refresh</button>' +
-        //        '</div>' +
-        '</div > ' +
+        '   <div class="col-md-12"><h4 style="padding-top:30px; padding-bottom:30px">Budgets Dashboard</h4></div>' +
+        '   <div class="form-group form-inline col-md-4 mb-3 d-flex">' +
+        '      <label class="d-inline-block pr-2" for="Campuses">Campus:</label>' +
+        '      <select class="form-control form-control-sm" id="Campuses" onchange=GetExpenseYear()>' + Cam +
+        '      </select>' +
+        '   </div>' +
+        '   <div class="form-group form-inline col-md-3 mb-3 d-flex">' +
+        '      <label class="d-inline-block pr-2" for="ExpYears">Expense Year:</label>' +
+        '      <select class="form-control form-control-sm" id="ExpYears" onchange=ChangeList()></select>' +
+        '   </div>' +
+        '</div> ' +
 
-        //'<div class="row">
         '<div class="table-responsive">' +
         '   <table id="budget_details_table" class="table table-striped table-hover table-bordered">' +
         '       <thead><tr>' +
@@ -227,14 +213,6 @@ function FindObjects(Vault, OTAlias, PDAlias1, PDType1, Value1, PDAlias2, PDType
     }
 
     return oSCs;
-}
-
-function Refresh() {
-    var SelectedCampus = $("#Campuses")[0].value;
-    var SelectedYear = $("#ExpYears")[0].value;
-    $(".container-fluid").empty();
-    //SetDetails(gDashboard, SelectedCampus, SelectedYear);
-    SetDetails(gDashboard);
 }
 
 function SortLineNo(ArrayVal) {
