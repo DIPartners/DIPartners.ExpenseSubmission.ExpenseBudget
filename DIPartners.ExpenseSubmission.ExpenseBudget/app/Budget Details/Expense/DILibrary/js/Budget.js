@@ -6,76 +6,59 @@ var gDashboard;
 function OnNewDashboard(dashboard) {
     gVault = dashboard.Vault;
     gDashboard = dashboard;
-    var tab = dashboard.Parent;
 
-    /*
-     *if (null != dashboard.CustomData && null != dashboard.CustomData.ObjectVersions) {
-            if (dashboard.CustomData.ObjectVersions.Count == 0) {
-                return;
-            }
-    */
-    // Some things are ready only after the dashboard has started.
     dashboard.Events.Register(MFiles.Event.Started, OnStarted);
     function OnStarted() {
-        SetDetails(dashboard, "", "");
+        SetDetails(dashboard);
     }
-    /*
-        }
-    */
 }
 
-function SetDetails(dashboard, selectedCampus, selectedYear) {
+function SetDetails(dashboard) {
 
     var Vault = dashboard.Vault;
-    /*
-        var ObjectVersionProperties = Vault.ObjectPropertyOperations.GetProperties(dashboard.CustomData.ObjectVersions.Item(1).ObjVer);
-        var CurrentObject = ObjectVersionProperties.SearchForPropertyByAlias(Vault, "vProperty.Campus", true);
-        
-        var CurrentCampus = (CurrentObject == null)?
-                            ObjectVersionProperties[0].TypedValue.DisplayValue : CurrentObject.TypedValue.DisplayValue;
-        var CurrentYear = new Date().getFullYear();
-        CurrentCampus = (selectedCampus == "") ? CurrentCampus : selectedCampus ;
-        CurrentYear = (selectedYear == "") ? CurrentYear : selectedYear;
-    */
     var OExpTotalResults = Vault.ObjectSearchOperations.SearchForObjectsByConditions(
         FindObjects(Vault, 'vObject.ExpenseTotal', "", "", "", "", "", ""), MFSearchFlagNone, true);
     var TotalResultsObjVers = OExpTotalResults.GetAsObjectVersions().GetAsObjVers();
     var TotalProperties = Vault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TotalResultsObjVers);
 
-    var ctr, selected = "", Campuses = [], ExpenseYears = [];
-    var Cam = "", ExpYears = "";
+    var ctr, Campuses = [];
+    var Cam = "";
     for (ctr in TotalProperties) {
         var Campus = TotalProperties[ctr].SearchForPropertyByAlias(Vault, "vProperty.Campus", true).Value.DisplayValue;
         if (jQuery.inArray(Campus, Campuses) == -1) {
             Campuses.push(Campus);
-            //            selected = (CurrentCampus == Campus) ? "selected" : "";
-            Cam += '<option value="' + Campus + '" ' + selected + '>' + Campus + '</option>';
+            Cam += '<option value="' + Campus + '">' + Campus + '</option>';
         }
-        /*var ExpenseYear = TotalProperties[ctr].SearchForPropertyByAlias(Vault, "vProperty.ExpenseYear", true).Value.DisplayValue;
-        if (jQuery.inArray(ExpenseYear, ExpenseYears) == -1) {
-            ExpenseYears.push(ExpenseYear);
-//            selected = (CurrentYear == ExpenseYear) ? "selected" : "";
-            ExpYears += '<option value="' + ExpenseYear + '" ' + selected + '>' + ExpenseYear + '</option>';
-        }*/
     }
 
-    $('<div class="row ml-3">' +
+    $('<div class="row">' +
         '<div class="col-md-12"><h4 style="padding-top:30px; padding-bottom:30px">Budgets Dashboard</h4></div>' +
-        '<div class="form-group pr-5">' +
+        /*       '<div class="form-group pr-5">' +
+               '   <label class="d-inline-block pr-2" for="Campuses">Campus:</label>' +
+               '   <select class="form-control form-control-sm d-inline-block" style="width: auto;" id="Campuses" onchange="GetExpenseYear()">' + Cam +
+               '   </select>' +
+               '</div>' +
+               '<div  class="form-group pr-5">' +
+               '   <label class="d-inline-block pr-2" for="Campuses">Expense Year:</label>' +
+               '   <select class="form-control form-control-sm d-inline-block" style="width: auto;" id="ExpYears" onchange="ChangeList()"></select>' +
+               '</div>' +
+       */
+        '<div class="form-group form-inline col-md-4 mb-3 d-flex">' +
         '   <label class="d-inline-block pr-2" for="Campuses">Campus:</label>' +
-        '   <select class="form-control form-control-sm d-inline-block" style="width: auto;" id="Campuses" onchange="GetExpenseYear()">' + Cam +
+        '   <select class="form-control form-control-sm" id="Campuses" onchange=GetExpenseYear()>' + Cam +
         '   </select>' +
         '</div>' +
-        '<div  class="form-group pr-5">' +
-        '   <label class="d-inline-block pr-2" for="Campuses">Expense Year:</label>' +
-        '   <select class="form-control form-control-sm d-inline-block" style="width: auto;" id="ExpYears" onchange="ChangeList()">' + ExpYears +
-        '   </select>' +
+        '<div class="form-group form-inline col-md-3 mb-3 d-flex">' +
+        '   <label class="d-inline-block pr-2" for="ExpYears">Expense Year:</label>' +
+        '   <select class="form-control form-control-sm" id="ExpYears" onchange=ChangeList()></select>' +
         '</div>' +
-        '<div class="d-inline-block">' +
-        '   <button type="button" class="btn btn-sm btn-outline-secondary mb-4" onclick="Refresh()">Refresh</button>' +
-        '</div></div>' +
+        //        '<div class="form-group form-inline col-md-3">' +
+        //        '   <button type="button" class="btn btn-sm btn-outline-secondary mb-3" style="vertical-align:bottom" onclick="Refresh()">Refresh</button>' +
+        //        '</div>' +
+        '</div > ' +
 
-        '<div class="row"><div class="col-lg-12">' +
+        //'<div class="row">
+        '<div class="table-responsive">' +
         '   <table id="budget_details_table" class="table table-striped table-hover table-bordered">' +
         '       <thead><tr>' +
         '           <th>Expense Type</th>' +
@@ -88,7 +71,7 @@ function SetDetails(dashboard, selectedCampus, selectedYear) {
         '       <tfoot>' +
         '       </tfoot>' +
         '   </table>' +
-        '</div></div>'
+        '</div>'
     ).appendTo(".container-fluid");
     GetExpenseYear();
 }
@@ -102,18 +85,19 @@ function GetExpenseYear() {
     var TotalResultsObjVers = OExpTotalResults.GetAsObjectVersions().GetAsObjVers();
     var TotalProperties = gVault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TotalResultsObjVers);
 
-    var ctr, selected = "", Campuses = [], ExpenseYears = [];
-    var Cam = "", ExpYears = "";
+    var ctr, ExpenseYears = [];
+    var ExpYears = "";
     for (ctr in TotalProperties) {
         var ExpenseYear = TotalProperties[ctr].SearchForPropertyByAlias(gVault, "vProperty.ExpenseYear", true).Value.DisplayValue;
         if (jQuery.inArray(ExpenseYear, ExpenseYears) == -1) {
             ExpenseYears.push(ExpenseYear);
-            ExpYears += '<option value="' + ExpenseYear + '" ' + selected + '>' + ExpenseYear + '</option>';
+            ExpYears += '<option value="' + ExpenseYear + '">' + ExpenseYear + '</option>';
         }
     }
 
     var SelectBody = $('#ExpYears');
     SelectBody.append(ExpYears);
+
     ChangeList();
 }
 
@@ -125,7 +109,7 @@ function ChangeList(val) {
 
     var ArrayVal = [];
 
-    var cam = $("#Campuses")[0].value;
+    var campus = $("#Campuses")[0].value;
     var year = $("#ExpYears")[0].value;
 
     var OEXTypeResults = gVault.ObjectSearchOperations.SearchForObjectsByConditions(
@@ -133,11 +117,11 @@ function ChangeList(val) {
     var TypeResultsObjVers = OEXTypeResults.GetAsObjectVersions().GetAsObjVers();
 
     var OBudgetResults = gVault.ObjectSearchOperations.SearchForObjectsByConditions(
-        FindObjects(gVault, 'vObject.ExpenseBudget', 'vProperty.Campus', MFDatatypeText, cam, 'vProperty.ExpenseYear', MFDatatypeInteger, year), MFSearchFlagNone, true);
+        FindObjects(gVault, 'vObject.ExpenseBudget', 'vProperty.Campus', MFDatatypeText, campus, 'vProperty.ExpenseYear', MFDatatypeInteger, year), MFSearchFlagNone, true);
     var BudgetResultsObjVers = OBudgetResults.GetAsObjectVersions().GetAsObjVers();
 
     var OExpTotalResults = gVault.ObjectSearchOperations.SearchForObjectsByConditions(
-        FindObjects(gVault, 'vObject.ExpenseTotal', 'vProperty.Campus', MFDatatypeText, cam, 'vProperty.ExpenseYear', MFDatatypeInteger, year), MFSearchFlagNone, true);
+        FindObjects(gVault, 'vObject.ExpenseTotal', 'vProperty.Campus', MFDatatypeText, campus, 'vProperty.ExpenseYear', MFDatatypeInteger, year), MFSearchFlagNone, true);
     var TotalResultsObjVers = OExpTotalResults.GetAsObjectVersions().GetAsObjVers();
 
     var sumBudget = 0, sumSpend = 0, sumRemaining = 0;
@@ -193,11 +177,10 @@ function ChangeList(val) {
             '   <td><span id="sumRemaining" style="float: right;">' + formatter.format(sumRemaining) + '</span></td >' +
             '</tr>'
         TableFooter.append(footerStr);
+
         var bAllBudgetUnlimited = true, bAllRemainingUnlimited = true;
         for (var j = 0; j < TypeResultsObjVers.Count; j++) {
-            var num = $("#Remaining" + j).text();
-            if (num.indexOf('(') == 0) // found
-                $("#Remaining" + j).css('color', '#f00');
+            if ($("#Remaining" + j).text().indexOf('(') == 0) $("#Remaining" + j).css('color', '#f00');
             if ($("#budget" + j).text() != "unlimited") bAllBudgetUnlimited = false;
             if ($("#Remaining" + j).text() != "unlimited") bAllRemainingUnlimited = false;
         }
@@ -250,13 +233,8 @@ function Refresh() {
     var SelectedCampus = $("#Campuses")[0].value;
     var SelectedYear = $("#ExpYears")[0].value;
     $(".container-fluid").empty();
-    SetDetails(gDashboard, SelectedCampus, SelectedYear);
-}
-
-function Refresh1() {
-    $("#Campuses")[0].selectedIndex = 0;
-    $("#ExpYears")[0].selectedIndex = 0;
-    $("#budget_details_table tbody").empty();
+    //SetDetails(gDashboard, SelectedCampus, SelectedYear);
+    SetDetails(gDashboard);
 }
 
 function SortLineNo(ArrayVal) {
