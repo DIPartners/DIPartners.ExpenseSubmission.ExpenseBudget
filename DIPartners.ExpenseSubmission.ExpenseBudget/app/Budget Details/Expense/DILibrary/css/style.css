@@ -18,6 +18,11 @@ th {
     width: 25%;
 }
 
+th:hover {
+    cursor: pointer;
+    background: #AAA;
+}
+
 .table-striped > tbody > tr:nth-child(odd) > td,
 .table-striped > tbody > tr:nth-child(odd) > th {
     background-color: #ecf2f8 !important;
@@ -33,4 +38,17 @@ tfoot {
     font-size: 15px !important;
     font-weight: 600;
     width: 25%;
+}
+.form-group {
+    margin-bottom: 0px;
+}
+
+table.dataTable, table.dataTable th, table.dataTable td {
+    box-sizing: border-box !important;
+}
+
+@media only screen and (max-width: 480px) {
+    table {
+        width: 95%;
+    }
 }

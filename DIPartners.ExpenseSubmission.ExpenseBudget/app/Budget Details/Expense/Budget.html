@@ -13,11 +13,23 @@
     <!-- Styles -->
     <link rel="stylesheet" type="text/css" href="DILibrary/js/bootstrap/4.5.2/css/bootstrap.min.css" />
     <link rel="Stylesheet" type="text/css" href="DILibrary/css/style.css" />
-    <!-- JavaScript -->
+    <!-- DataTables -->
+    <link rel="stylesheet" type="text/css" href="DILibrary/js/datatable/1.10.22/jquery.dataTables.min.css" />
+    <script type="text/javascript" src="DILibrary/js/datatable/1.10.22/jquery.dataTables.min.js"></script>
+     JavaScript 
     <script type="text/javascript" src="DILibrary/js/jquery-3.5.1/jquery-3.5.1.js"></script>
+
     <!-- DIP Library -->
-    <script src="DILibrary/js/jquery-resizable-dom/jquery-resizable.min.js"></script>
+    <!--<script src="DILibrary/js/jquery-resizable-dom/jquery-resizable.min.js"></script>-->
     <script src="DILibrary/js/Budget.js"></script>
+    <script>
+        $(document).ready(function () {
+            gTable = $('#budget_details_table').DataTable({
+                paging: false,
+                bFilter: false
+            });
+        });
+    </script>
 
 </head>
 <body style="zoom: 1;">

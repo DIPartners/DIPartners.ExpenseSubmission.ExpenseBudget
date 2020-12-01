@@ -60,6 +60,69 @@ function SetDetails(dashboard) {
         '</div>'
     ).appendTo(".container-fluid");
     GetExpenseYear();
+    
+    var f_type = 1;
+    var f_budget = 1;
+    var f_spend = 1;
+    var f_remain = 1;
+    $("#thType").click(function () {
+        f_type *= -1;
+        var n = $(this).prevAll().length;
+        sortTable(f_type, n);
+    });
+    $("#thBudget").click(function () {
+        f_budget *= -1;
+        var n = $(this).prevAll().length;
+        sortTable(f_budget, n);
+    });
+    $("#thSpend").click(function () {
+        f_spend *= -1;
+        var n = $(this).prevAll().length;
+        sortTable(f_spend, n);
+    });
+    $("#thRemain").click(function () {
+        f_remain *= -1;
+        var n = $(this).prevAll().length;
+        sortTable(f_remain, n);
+    });
+}
+
+function sortTable(f, n) {
+    var rows = $('#budget_details_table tbody  tr').get();
+
+    rows.sort(function (a, b) {
+
+        var A = getVal(a);
+        var B = getVal(b);
+
+     //   if (A.substring(0, 1) == "$") { A = Number(A.substring(1).replace(/[^0-9.-]+/g, "")); }
+     //   if (B.substring(0, 1) == "$") { B = Number(B.substring(1).replace(/[^0-9.-]+/g, "")); }
+
+        //if (A == "UNLIMITED" || B == "UNLIMITED") return -1;
+        if (A < B) {
+            return -1 * f;
+        }
+        if (A > B) {
+            return 1 * f;
+        }
+        return 0;
+    });
+
+    function getVal(elm) {
+        var v = $(elm).children('td').eq(n).text().toUpperCase();
+        if (v.substring(0, 1) == "$")
+        if ($.isNumeric(v)) {
+        //if ($.isNumeric(v.replace(/[^0-9.-]+/g, ""))) {
+            v = parseInt(v, 10);
+        }
+
+        if (v.substring(0, 1) == "$") { v = Number(v.substring(1).replace(/[^0-9.-]+/g, "")); }
+        return v;
+    }
+
+    $.each(rows, function (index, row) {
+        $('#budget_details_table').children('tbody').append(row);
+    });
 }
 
 function GetExpenseYear() {
