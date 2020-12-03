@@ -6,7 +6,7 @@ body {
 table {
     line-height: 20px !important;
     font-size: 14px !important;
-    width: 97% !important;
+    /*width: 100% !important;*/
     margin: auto;
 }
 
@@ -16,21 +16,21 @@ th {
     font-size: 15px !important;
     font-weight: 600;
     width: 25%;
+    text-align: center;
+    text-transform: uppercase;
 }
 
-th:hover {
-    cursor: pointer;
-    background: #AAA;
-}
 
 .table-striped > tbody > tr:nth-child(odd) > td,
 .table-striped > tbody > tr:nth-child(odd) > th {
     background-color: #ecf2f8 !important;
 }
 
-.col-md-12 {
+.col-md-12 .col-md-5 {
     padding-left: 0px !important;
 }
+
+
 
 tfoot {
     background-color: #318CCC !important;
@@ -39,6 +39,7 @@ tfoot {
     font-weight: 600;
     width: 25%;
 }
+
 .form-group {
     margin-bottom: 0px;
 }
@@ -47,8 +48,64 @@ table.dataTable, table.dataTable th, table.dataTable td {
     box-sizing: border-box !important;
 }
 
-@media only screen and (max-width: 480px) {
+/*@media only screen and (max-width: 480px) {
     table {
-        width: 95%;
+        width:95%;
+    }
+    
+}*/
+@media screen and (max-width: 600px) {
+    table {
+        border: 0;
+    }
+
+    table caption {
+        font-size: 1.3em;
+    }
+
+    table thead {
+        border: none;
+        clip: rect(0 0 0 0);
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        padding: 0;
+        position: absolute;
+        width: 1px;
+    }
+
+    table tr {
+        border-bottom: 1px solid #ddd;
+        display: block;
+        margin-bottom: .625em;
+    }
+
+    table td {
+        /*border-bottom: 1px solid #ddd;*/
+        display: block;
+        font-size: .9em;
+        text-align: right;
+        height: 30px !important;
+    }
+
+    table td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    table td:last-child {
+        border-bottom: 0;
+    }
+
+    .table td, .table th {
+        padding-top: 5px !important;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6
+    }
+
+    .table-bordered td, .table-bordered th {
+        border: .02em solid #dee2e6 !important;
     }
 }

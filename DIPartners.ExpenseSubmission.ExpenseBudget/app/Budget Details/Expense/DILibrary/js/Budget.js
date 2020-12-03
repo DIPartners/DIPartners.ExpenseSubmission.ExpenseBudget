@@ -44,13 +44,14 @@ function SetDetails(dashboard) {
         '   </div>' +
         '</div> ' +
 
-        '<div class="table-responsive">' +
-        '   <table id="budget_details_table" class="table table-striped table-hover table-bordered">' +
+        //        '<div class="table-responsive">' +
+        '<div>' +
+        '   <table id="budget_details_table" class="table table-striped table-hover table-bordered ">' +
         '       <thead><tr>' +
-        '           <th>Expense Type</th>' +
-        '           <th>Campus Budget</th>' +
-        '           <th>Current Spend</th>' +
-        '           <th>Remaining</th>' +
+        '           <th scope="col" id="thType">Expense Type</th>' +
+        '           <th scope="col" id="thBudget">Campus Budget</th>' +
+        '           <th scope="col" id="thSpend">Current Spend</th>' +
+        '           <th scope="col" id="thRemain">Remaining</th>' +
         '       </thead></tr>' +
         '       <tbody>' +
         '       </tdoby>' +
@@ -60,69 +61,6 @@ function SetDetails(dashboard) {
         '</div>'
     ).appendTo(".container-fluid");
     GetExpenseYear();
-    
-    var f_type = 1;
-    var f_budget = 1;
-    var f_spend = 1;
-    var f_remain = 1;
-    $("#thType").click(function () {
-        f_type *= -1;
-        var n = $(this).prevAll().length;
-        sortTable(f_type, n);
-    });
-    $("#thBudget").click(function () {
-        f_budget *= -1;
-        var n = $(this).prevAll().length;
-        sortTable(f_budget, n);
-    });
-    $("#thSpend").click(function () {
-        f_spend *= -1;
-        var n = $(this).prevAll().length;
-        sortTable(f_spend, n);
-    });
-    $("#thRemain").click(function () {
-        f_remain *= -1;
-        var n = $(this).prevAll().length;
-        sortTable(f_remain, n);
-    });
-}
-
-function sortTable(f, n) {
-    var rows = $('#budget_details_table tbody  tr').get();
-
-    rows.sort(function (a, b) {
-
-        var A = getVal(a);
-        var B = getVal(b);
-
-     //   if (A.substring(0, 1) == "$") { A = Number(A.substring(1).replace(/[^0-9.-]+/g, "")); }
-     //   if (B.substring(0, 1) == "$") { B = Number(B.substring(1).replace(/[^0-9.-]+/g, "")); }
-
-        //if (A == "UNLIMITED" || B == "UNLIMITED") return -1;
-        if (A < B) {
-            return -1 * f;
-        }
-        if (A > B) {
-            return 1 * f;
-        }
-        return 0;
-    });
-
-    function getVal(elm) {
-        var v = $(elm).children('td').eq(n).text().toUpperCase();
-        if (v.substring(0, 1) == "$")
-        if ($.isNumeric(v)) {
-        //if ($.isNumeric(v.replace(/[^0-9.-]+/g, ""))) {
-            v = parseInt(v, 10);
-        }
-
-        if (v.substring(0, 1) == "$") { v = Number(v.substring(1).replace(/[^0-9.-]+/g, "")); }
-        return v;
-    }
-
-    $.each(rows, function (index, row) {
-        $('#budget_details_table').children('tbody').append(row);
-    });
 }
 
 function GetExpenseYear() {
@@ -130,7 +68,7 @@ function GetExpenseYear() {
     var cam = $("#Campuses")[0].value;
 
     var OExpTotalResults = gVault.ObjectSearchOperations.SearchForObjectsByConditions(
-        FindObjects(gVault, 'vObject.ExpenseTotal', "vProperty.Campus", MFDatatypeText, cam, "", "", ""), MFSearchFlagNone, true);
+        FindObjects(gVault, "vObject.ExpenseTotal", "vProperty.Campus", MFDatatypeText, cam, "", "", ""), MFSearchFlagNone, true);
     var TotalResultsObjVers = OExpTotalResults.GetAsObjectVersions().GetAsObjVers();
     var TotalProperties = gVault.ObjectPropertyOperations.GetPropertiesOfMultipleObjects(TotalResultsObjVers);
 
@@ -208,10 +146,10 @@ function ChangeList(val) {
 
             var bodyStr =
                 '<tr>' +
-                '<td>' + TypeProps + '</td >' +
-                '<td><span id="budget' + i + '" style="float: right;">' + CampusBudget + '</span></td >' +
-                '<td><span id="total' + i + '" style="float: right;">' + CampusTotal + '</span></td >' +
-                '<td><span id="Remaining' + i + '" style="float: right;">' + Remaining + '</span></td >' +
+                '<td scope="row" data-label="Expense Type">' + TypeProps + '</td >' +
+                '<td scope="row" data-label="Campus Budget"><span id="budget' + i + '" style="float: right;">' + CampusBudget + '</span></td >' +
+                '<td scope="row" data-label="Current Spend"><span id="total' + i + '" style="float: right;">' + CampusTotal + '</span></td >' +
+                '<td scope="row" data-label="Remaining"><span id="Remaining' + i + '" style="float: right;">' + Remaining + '</span></td >' +
                 '</tr>';
             ArrayVal[i] = TypeResultsObjVers[i].ID + ", " + bodyStr;
         }
@@ -221,9 +159,9 @@ function ChangeList(val) {
         var footerStr =
             '<tr>' +
             '   <td><span style="float: right;">Grand Total</span></td >' +
-            '   <td><span id="sumBudget" style="float: right;">' + formatter.format(sumBudget) + '</span></td >' +
-            '   <td><span id="sumSpend" style="float: right;">' + formatter.format(sumSpend) + '</span></td >' +
-            '   <td><span id="sumRemaining" style="float: right;">' + formatter.format(sumRemaining) + '</span></td >' +
+            '   <td scope="row" data-label="Total Budget"><span id="sumBudget" style="float: right;">' + formatter.format(sumBudget) + '</span></td >' +
+            '   <td scope="row" data-label="Total Spend"><span id="sumSpend" style="float: right;">' + formatter.format(sumSpend) + '</span></td >' +
+            '   <td scope="row" data-label="Total Remaining"><span id="sumRemaining" style="float: right;">' + formatter.format(sumRemaining) + '</span></td >' +
             '</tr>'
         TableFooter.append(footerStr);
 
