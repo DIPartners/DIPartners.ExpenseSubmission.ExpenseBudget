@@ -59,10 +59,6 @@ table.dataTable, table.dataTable th, table.dataTable td {
         border: 0;
     }
 
-    table caption {
-        font-size: 1.3em;
-    }
-
     table thead {
         border: none;
         clip: rect(0 0 0 0);
@@ -74,14 +70,17 @@ table.dataTable, table.dataTable th, table.dataTable td {
         width: 1px;
     }
 
+    table tfoot {
+        text-transform: uppercase;
+    }
+
     table tr {
-        border-bottom: 1px solid #ddd;
+        border-bottom: 2px solid #cccccc;
         display: block;
         margin-bottom: .625em;
     }
 
     table td {
-        /*border-bottom: 1px solid #ddd;*/
         display: block;
         font-size: .9em;
         text-align: right;
@@ -102,10 +101,14 @@ table.dataTable, table.dataTable th, table.dataTable td {
     .table td, .table th {
         padding-top: 5px !important;
         vertical-align: top;
-        border-top: 1px solid #dee2e6
     }
 
     .table-bordered td, .table-bordered th {
-        border: .02em solid #dee2e6 !important;
+        border: 1px solid #cccccc;
+        border-bottom: 0 !important
+    }
+
+    .table-bordered {
+        border: 0px !important
     }
 }
